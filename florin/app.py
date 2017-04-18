@@ -61,7 +61,7 @@ def create_app():
 app = create_app()
 
 
-@app.route('/api/file_uploads', methods=['POST'])
+@app.route('/api/fileUploads', methods=['POST'])
 @jsonify()
 @handle_exceptions
 def upload_files():

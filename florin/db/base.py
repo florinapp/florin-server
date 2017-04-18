@@ -93,6 +93,8 @@ class FileUpload(Base, SearchByIdMixin):
     filename = Column(String(255), nullable=False)
     uploaded_at = Column(DateTime, nullable=False)
     file_content = Column(Text, nullable=False)  # base64-encoded
+    account_id = Column(Integer, ForeignKey('accounts.id'), nullable=True)
+    account_signature = Column(String(128), nullable=True)
 
 
 def get_engine(dbfile):

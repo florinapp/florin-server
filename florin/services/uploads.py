@@ -1,7 +1,9 @@
+import hashlib
 import base64
 import datetime
 from .exceptions import InvalidRequest
 from florin.db import FileUpload
+from ofxparse import OfxParser
 
 
 def ensure_single_file_uploaded(files):
@@ -18,6 +20,14 @@ def ensure_file_extension(filename):
     raise InvalidRequest('Only .OFX and .QFX files are supported at this time')
 
 
+def calculate_account_signature(ofx_account):
+    """A signature that somewhat uniquely identifies an OFX file with an account"""
+    fields = ['account_id', 'account_type', 'branch_id', 'curdef', 'institution',
+              'number', 'routing_number', 'type']
+
+    return 'sha256:' + hashlib.sha256('&'.join([str(getattr(ofx_account, field)) for field in fields])).hexdigest()
+
+
 def upload(app, files):
     session = app.session
     file_items = ensure_single_file_uploaded(files)
@@ -26,6 +36,11 @@ def upload(app, files):
 
     file_upload = FileUpload(filename=filename, uploaded_at=datetime.datetime.utcnow(),
                              file_content=base64.b64encode(file_storage.read()))
+
+    file_storage.seek(0)
+    parser = OfxParser()
+    ofxfile= parser.parse(file_storage)
+    account_signature = calculate_account_signature(ofxfile.account)
     session.add(file_upload)
     try:
         session.commit()
@@ -33,4 +48,4 @@ def upload(app, files):
         session.rollback()
         raise
 
-    return {'id': file_upload.id}
+    return {'id': file_upload.id, 'signature': account_signature}
