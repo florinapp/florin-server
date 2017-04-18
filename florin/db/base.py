@@ -86,8 +86,8 @@ class Category(Base, ToDictMixin, SearchByIdMixin):
     parent = relationship('Category', remote_side=[id])
 
 
-class FileUpload(Base):
-    __tablename__ = 'file_uploads'
+# class FileUpload(Base):
+#     __tablename__ = 'file_uploads'
 
 
 def get_engine(dbfile):

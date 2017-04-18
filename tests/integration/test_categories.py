@@ -1,7 +1,5 @@
-import pytest
 import requests
-from florin.database import db
-from .utils import reset_database, db_fixture
+from .utils import reset_database
 from .fixtures.categories import automobile, gasoline, insurance
 
 
