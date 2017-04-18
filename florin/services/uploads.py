@@ -34,13 +34,15 @@ def upload(app, files):
     filename, file_storage = file_items[0]
     ensure_file_extension(filename)
 
-    file_upload = FileUpload(filename=filename, uploaded_at=datetime.datetime.utcnow(),
-                             file_content=base64.b64encode(file_storage.read()))
-
-    file_storage.seek(0)
     parser = OfxParser()
     ofxfile= parser.parse(file_storage)
     account_signature = calculate_account_signature(ofxfile.account)
+
+    file_storage.seek(0)
+    file_upload = FileUpload(filename=filename, uploaded_at=datetime.datetime.utcnow(),
+                             file_content=base64.b64encode(file_storage.read()),
+                             account_signature=account_signature)
+
     session.add(file_upload)
     try:
         session.commit()
@@ -48,4 +50,5 @@ def upload(app, files):
         session.rollback()
         raise
 
+    # TODO: match an existing account and return the account_id
     return {'id': file_upload.id, 'signature': account_signature}
