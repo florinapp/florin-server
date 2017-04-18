@@ -2,7 +2,7 @@ import hashlib
 import sqlalchemy
 from sqlalchemy.orm import sessionmaker, relationship
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String, ForeignKey, Date, Float, UnicodeText
+from sqlalchemy import Column, Integer, String, ForeignKey, Date, Float, UnicodeText, DateTime, Text
 
 
 Base = declarative_base()
@@ -86,8 +86,13 @@ class Category(Base, ToDictMixin, SearchByIdMixin):
     parent = relationship('Category', remote_side=[id])
 
 
-# class FileUpload(Base):
-#     __tablename__ = 'file_uploads'
+class FileUpload(Base, SearchByIdMixin):
+    __tablename__ = 'file_uploads'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    filename = Column(String(255), nullable=False)
+    uploaded_at = Column(DateTime, nullable=False)
+    file_content = Column(Text, nullable=False)  # base64-encoded
 
 
 def get_engine(dbfile):
