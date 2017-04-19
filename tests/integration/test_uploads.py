@@ -77,7 +77,7 @@ def test_link_upload_with_account():
 
     response = requests.post('http://localhost:7000/api/fileUploads/{}/linkAccount'.format(file_upload.id),
                              headers={'content-type': 'application/json'},
-                             data=json.dumps({'account_id': account.id}))
+                             data=json.dumps({'accountId': account.id}))
     assert response.status_code == 200
     assert response.json() == {'total_skipped': 0, 'total_imported': 6, 'account_id': account.id}
     assert account.balances[0].balance == 2935.4

@@ -68,7 +68,7 @@ def link(app, file_upload_id, request_json):
     except NoResultFound:
         raise ResourceNotFound()
 
-    account_id = request_json['account_id']
+    account_id = request_json['accountId']
     if account_id == 'NEW':
         # TODO: create new account
         pass
