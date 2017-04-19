@@ -68,6 +68,9 @@ def link(app, file_upload_id, request_json):
     except NoResultFound:
         raise ResourceNotFound()
 
+    if file_upload.account_id is not None:
+        raise InvalidRequest('file_upload {} is already associated with an account'.format(file_upload_id))
+
     account_id = request_json['accountId']
     if account_id == 'NEW':
         # TODO: create new account

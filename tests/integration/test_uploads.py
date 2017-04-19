@@ -43,16 +43,34 @@ def test_uploads___wrong_file_extension():
     assert response.json() == {'error': 'Only .OFX and .QFX files are supported at this time'}
 
 
-def test_link_upload_with_account___wrong_account_id():
-    pass
+def test_link_upload_with_account___wrong_account_id(td_ofx):
+    response = requests.post('http://localhost:7000/api/fileUploads/{}/linkAccount'.format(td_ofx['id']),
+                             headers={'content-type': 'application/json'},
+                             data=json.dumps({'accountId': 999}))
+    assert response.status_code == 400
+    assert response.json() == {'error': 'Invalid account_id: 999'}
 
 
-def test_link_upload_with_account___wrong_upload_id():
-    pass
+def test_link_upload_with_account___wrong_upload_id(td_chequing_account):
+    response = requests.post('http://localhost:7000/api/fileUploads/999/linkAccount',
+                             headers={'content-type': 'application/json'},
+                             data=json.dumps({'accountId': td_chequing_account['id']}))
+    assert response.status_code == 404
 
 
-def test_link_upload_with_account___upload_already_linked():
-    pass
+def test_link_upload_with_account___upload_already_linked(td_chequing_account, td_ofx):
+    session = db.Account.session
+    account = db.Account.get_by_id(td_chequing_account['id'])
+    file_upload = db.FileUpload.get_by_id(td_ofx['id'])
+    file_upload.account_id = account.id
+    session.add(file_upload)
+    session.commit()
+
+    response = requests.post('http://localhost:7000/api/fileUploads/{}/linkAccount'.format(file_upload.id),
+                             headers={'content-type': 'application/json'},
+                             data=json.dumps({'accountId': account.id}))
+    assert response.status_code == 400
+    assert {'error': 'file_upload 1 is already associated with an account'} == response.json()
 
 
 def test_link_upload_with_account(td_chequing_account, td_ofx):
