@@ -33,6 +33,7 @@ class Account(Base, ToDictMixin, SearchByIdMixin):
     name = Column(String(64), nullable=False)
     type = Column(String(32), nullable=False)
     signature = Column(String(64), nullable=True)
+    balances = relationship('AccountBalance')
 
 
 class AccountBalance(Base, ToDictMixin):

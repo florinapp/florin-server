@@ -68,6 +68,13 @@ def upload_files():
     return uploads.upload(app, flask.request.files)
 
 
+@app.route('/api/fileUploads/<file_upload_id>/linkAccount', methods=['POST'])
+@jsonify()
+@handle_exceptions
+def link_file_upload_with_account(file_upload_id):
+    return uploads.link(app, file_upload_id, flask.request.json)
+
+
 @app.route('/api/accounts', methods=['GET'])
 @jsonify()
 @handle_exceptions

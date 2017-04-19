@@ -1,9 +1,17 @@
+import logging
 import hashlib
 import base64
 import datetime
-from .exceptions import InvalidRequest
-from florin.db import FileUpload
+from .exceptions import InvalidRequest, ResourceNotFound
+from florin.db import FileUpload, Transaction, Account, AccountBalance
 from ofxparse import OfxParser
+from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy.exc import IntegrityError
+from StringIO import StringIO
+from .categories import TBD_CATEGORY_ID
+
+
+logger = logging.getLogger(__name__)
 
 
 def ensure_single_file_uploaded(files):
@@ -52,3 +60,59 @@ def upload(app, files):
 
     # TODO: match an existing account and return the account_id
     return {'id': file_upload.id, 'signature': account_signature}
+
+
+def link(app, file_upload_id, request_json):
+    try:
+        file_upload = FileUpload.get_by_id(file_upload_id)
+    except NoResultFound:
+        raise ResourceNotFound()
+
+    account_id = request_json['account_id']
+    if account_id == 'NEW':
+        # TODO: create new account
+        pass
+    else:
+        try:
+            account = Account.get_by_id(account_id)
+        except NoResultFound:
+            raise InvalidRequest('Invalid account_id: {}'.format(account_id))
+
+    file_content = base64.b64decode(file_upload.file_content)
+    parser = OfxParser()
+    ofxfile = parser.parse(StringIO(file_content))
+
+    session = app.session
+    total_imported, total_skipped = 0, 0
+    for t in ofxfile.account.statement.transactions:
+        transaction = Transaction(date=t.date,
+                                  info=t.memo,
+                                  payee=t.payee,
+                                  memo=t.memo,
+                                  amount=t.amount,
+                                  transaction_type=t.type,
+                                  category_id=TBD_CATEGORY_ID,
+                                  account_id=account.id)
+        session.add(transaction)
+        try:
+            session.commit()
+            total_imported += 1
+        except IntegrityError:
+            session.rollback()
+            total_skipped += 1
+            logger.warn('Skip duplicated transaction: {}. checksum: {}'.format(transaction, transaction.checksum))
+
+    # record account balance history
+    account_balance = AccountBalance(
+        account_id=account.id,
+        date=ofxfile.account.statement.balance_date,
+        balance=ofxfile.account.statement.balance
+    )
+    session.add(account_balance)
+    try:
+        session.commit()
+    except:
+        session.rollback()
+        raise
+
+    return {'account_id': account.id, 'total_imported': total_imported, 'total_skipped': total_skipped}
