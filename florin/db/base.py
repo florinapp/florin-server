@@ -2,7 +2,7 @@ import hashlib
 import sqlalchemy
 from sqlalchemy.orm import sessionmaker, relationship
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String, ForeignKey, Date, Float, UnicodeText
+from sqlalchemy import Column, Integer, String, ForeignKey, Date, Float, UnicodeText, DateTime, Text
 
 
 Base = declarative_base()
@@ -32,7 +32,8 @@ class Account(Base, ToDictMixin, SearchByIdMixin):
     institution = Column(String(64), nullable=False)
     name = Column(String(64), nullable=False)
     type = Column(String(32), nullable=False)
-    signature = Column(String(64), nullable=True)
+    signature = Column(String(64), nullable=True)  # TODO: remove
+    balances = relationship('AccountBalance')
 
 
 class AccountBalance(Base, ToDictMixin):
@@ -86,8 +87,15 @@ class Category(Base, ToDictMixin, SearchByIdMixin):
     parent = relationship('Category', remote_side=[id])
 
 
-# class FileUpload(Base):
-#     __tablename__ = 'file_uploads'
+class FileUpload(Base, SearchByIdMixin):
+    __tablename__ = 'file_uploads'
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    filename = Column(String(255), nullable=False)
+    uploaded_at = Column(DateTime, nullable=False)
+    file_content = Column(Text, nullable=False)  # base64-encoded
+    account_id = Column(Integer, ForeignKey('accounts.id'), nullable=True)
+    account_signature = Column(String(128), nullable=True)
 
 
 def get_engine(dbfile):

@@ -7,7 +7,7 @@ from decimal import Decimal
 from flask_cors import CORS
 from flask.json import JSONEncoder
 from . import db
-from .services import transactions, exceptions, accounts, categories
+from .services import transactions, exceptions, accounts, categories, uploads
 
 
 logging.basicConfig(level='DEBUG')
@@ -61,6 +61,20 @@ def create_app():
 app = create_app()
 
 
+@app.route('/api/fileUploads', methods=['POST'])
+@jsonify()
+@handle_exceptions
+def upload_files():
+    return uploads.upload(app, flask.request.files)
+
+
+@app.route('/api/fileUploads/<file_upload_id>/linkAccount', methods=['POST'])
+@jsonify()
+@handle_exceptions
+def link_file_upload_with_account(file_upload_id):
+    return uploads.link(app, file_upload_id, flask.request.json)
+
+
 @app.route('/api/accounts', methods=['GET'])
 @jsonify()
 @handle_exceptions
@@ -80,13 +94,6 @@ def post_accounts():
 @handle_exceptions
 def get_categories():
     return categories.get(app)
-
-
-@app.route('/api/accounts/<account_id>/upload', methods=['POST'])
-@jsonify()
-@handle_exceptions
-def upload_transactions(account_id):
-    return accounts.upload(app, account_id, flask.request.files)
 
 
 @app.route('/api/accounts/<account_id>', methods=['GET'])

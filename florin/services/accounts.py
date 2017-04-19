@@ -1,10 +1,8 @@
 import operator
-from florin.importer import get_importer
 from collections import defaultdict
 from .exceptions import ResourceNotFound, InvalidRequest
-from .categories import TBD_CATEGORY_ID
 from . import params
-from florin.db import Account, AccountBalance, Transaction, Category
+from florin.db import Account, Transaction, Category
 from sqlalchemy import func, and_
 
 
@@ -97,48 +95,3 @@ def post(app, request_json):
         account_id = account.id
         account = get_by_id(app, account_id)
         return {'account': account.to_dict()}
-
-
-def upload(app, account_id, files):
-    session = app.session
-    file_items = files.items()
-    assert len(file_items) == 1
-    filename, file_storage = file_items[0]
-    importer = get_importer(filename)
-    if not importer:
-        raise InvalidRequest('Unsupported file extension')
-
-    transactions, balance = importer.import_from(file_storage)
-    total_imported, total_skipped = 0, 0
-
-    account = get_by_id(app, account_id)
-    for t in transactions:
-        common_attrs = dict(t.common_attrs)
-        common_attrs['account_id'] = account.id  # TODO: Use relationship
-        common_attrs['category_id'] = TBD_CATEGORY_ID
-        try:
-            session.add(Transaction(**common_attrs))
-            session.commit()
-        except Exception as e:
-            print(str(e))
-            session.rollback()
-            total_skipped += 1
-        else:
-            total_imported += 1
-
-    if balance is not None:
-        balance.update({
-            'account_id': account.id,
-        })
-        account_balance = AccountBalance(**balance)
-        session.add(account_balance)
-        try:
-            session.commit()
-        except:
-            session.rollback()
-            raise
-
-    return {
-        'totalImported': total_imported,
-        'totalSkipped': total_skipped
-    }
