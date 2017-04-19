@@ -43,7 +43,7 @@ def upload(app, files):
     ensure_file_extension(filename)
 
     parser = OfxParser()
-    ofxfile= parser.parse(file_storage)
+    ofxfile = parser.parse(file_storage)
     account_signature = calculate_account_signature(ofxfile.account)
 
     file_storage.seek(0)
