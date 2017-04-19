@@ -90,5 +90,16 @@ def test_link_upload_with_account(td_chequing_account, td_ofx):
     assert file_upload.account_id == account.id
 
 
-def test_link_upload_with_account___create_new_account():
-    pass
+def test_link_upload_with_account___create_new_account(td_chequing_account, td_ofx):
+    session = db.Account.session
+    file_upload = db.FileUpload.get_by_id(td_ofx['id'])
+    response = requests.post('http://localhost:7000/api/fileUploads/{}/linkAccount'.format(file_upload.id),
+                             headers={'content-type': 'application/json'},
+                             data=json.dumps({'accountId': 'NEW'}))
+    assert response.status_code == 200
+    response_json = response.json()
+
+    session.expunge_all()
+    account_id = response_json['account_id']
+    file_upload = db.FileUpload.get_by_id(td_ofx['id'])
+    assert file_upload.account_id == account_id

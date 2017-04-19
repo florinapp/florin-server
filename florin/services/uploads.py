@@ -63,6 +63,7 @@ def upload(app, files):
 
 
 def link(app, file_upload_id, request_json):
+    session = app.session
     try:
         file_upload = FileUpload.get_by_id(file_upload_id)
     except NoResultFound:
@@ -73,8 +74,17 @@ def link(app, file_upload_id, request_json):
 
     account_id = request_json['accountId']
     if account_id == 'NEW':
-        # TODO: create new account
-        pass
+        account = Account(
+            institution='Unnamed',
+            name='Unnamed',
+            type='N/A',
+        )
+        session.add(account)
+        try:
+            session.commit()
+        except:
+            session.rollback()
+            raise
     else:
         try:
             account = Account.get_by_id(account_id)
@@ -85,7 +95,6 @@ def link(app, file_upload_id, request_json):
     parser = OfxParser()
     ofxfile = parser.parse(StringIO(file_content))
 
-    session = app.session
     total_imported, total_skipped = 0, 0
     for t in ofxfile.account.statement.transactions:
         transaction = Transaction(date=t.date,

@@ -32,7 +32,7 @@ class Account(Base, ToDictMixin, SearchByIdMixin):
     institution = Column(String(64), nullable=False)
     name = Column(String(64), nullable=False)
     type = Column(String(32), nullable=False)
-    signature = Column(String(64), nullable=True)
+    signature = Column(String(64), nullable=True)  # TODO: remove
     balances = relationship('AccountBalance')
 
 
