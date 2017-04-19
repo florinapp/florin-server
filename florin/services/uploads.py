@@ -102,12 +102,14 @@ def link(app, file_upload_id, request_json):
             total_skipped += 1
             logger.warn('Skip duplicated transaction: {}. checksum: {}'.format(transaction, transaction.checksum))
 
+    file_upload.account_id = account.id
     # record account balance history
     account_balance = AccountBalance(
         account_id=account.id,
         date=ofxfile.account.statement.balance_date,
         balance=ofxfile.account.statement.balance
     )
+    session.add(file_upload)
     session.add(account_balance)
     try:
         session.commit()

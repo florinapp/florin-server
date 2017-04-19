@@ -82,6 +82,10 @@ def test_link_upload_with_account():
     assert response.json() == {'total_skipped': 0, 'total_imported': 6, 'account_id': account.id}
     assert account.balances[0].balance == 2935.4
 
+    session.expunge_all()
+    file_upload = db.FileUpload.get_by_id(file_upload.id)
+    assert file_upload.account_id == account.id
+
 
 def test_link_upload_with_account___create_new_account():
     pass
