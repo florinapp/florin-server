@@ -1,10 +1,11 @@
 import json
-import datetime
 import base64
 import os
 import requests
 from florin import db
 from .utils import reset_database
+from .fixtures.accounts import td_chequing_account
+from .fixtures.file_uploads import td_ofx
 
 
 def setup_function(function):
@@ -54,26 +55,10 @@ def test_link_upload_with_account___upload_already_linked():
     pass
 
 
-def test_link_upload_with_account():
-    fixture_path = os.path.join(os.path.dirname(__file__), 'fixtures/reports.ofx')
-    with open(fixture_path, 'r') as fh:
-        file_content = fh.read()
-
-    session = db.FileUpload.session
-
-    file_upload = db.FileUpload(
-        filename='foo.ofx',
-        uploaded_at=datetime.datetime.utcnow(),
-        file_content=base64.b64encode(file_content)
-    )
-    account = db.Account(
-        institution='TD',
-        name='CHECKING',
-        type='checking',
-    )
-    session.add(file_upload)
-    session.add(account)
-    session.commit()
+def test_link_upload_with_account(td_chequing_account, td_ofx):
+    session = db.Account.session
+    account = db.Account.get_by_id(td_chequing_account['id'])
+    file_upload = db.FileUpload.get_by_id(td_ofx['id'])
 
     response = requests.post('http://localhost:7000/api/fileUploads/{}/linkAccount'.format(file_upload.id),
                              headers={'content-type': 'application/json'},
