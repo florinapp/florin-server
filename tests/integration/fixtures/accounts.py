@@ -31,3 +31,9 @@ def tangerine_credit_card_account():
 @db_fixture(db.Account)
 def rogers_bank_credit_card_account():
     return dict(id=5, institution='Rogers Bank', name='MasterCard', type='CreditCard')
+
+
+@pytest.fixture
+@db_fixture(db.Account)
+def deleted_account():
+    return dict(id=6, institution='FAKE', name='Fake', type='chequing', deleted=True)

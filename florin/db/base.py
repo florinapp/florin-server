@@ -2,7 +2,7 @@ import hashlib
 import sqlalchemy
 from sqlalchemy.orm import sessionmaker, relationship
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String, ForeignKey, Date, Float, UnicodeText, DateTime, Text
+from sqlalchemy import Column, Integer, String, ForeignKey, Date, Float, UnicodeText, DateTime, Text, Boolean
 
 
 Base = declarative_base()
@@ -33,6 +33,7 @@ class Account(Base, ToDictMixin, SearchByIdMixin):
     name = Column(String(64), nullable=False)
     type = Column(String(32), nullable=False)
     signature = Column(String(64), nullable=True)  # TODO: remove
+    deleted = Column(Boolean, nullable=False, default=False)
     balances = relationship('AccountBalance')
 
 

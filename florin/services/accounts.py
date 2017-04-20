@@ -13,14 +13,16 @@ def get_by_id(app, account_id):
     if account_id == '_all':
         return ALL_ACCOUNTS
 
-    query = app.session.query(Account).filter(Account.id == account_id)
+    query = app.session.query(Account).filter(and_(
+        Account.deleted == False,
+        Account.id == account_id))
     if query.count() != 1:
         raise ResourceNotFound()
 
     return query.one()
 
 
-def _get_expense_category_summary(app, account_id, args):
+def _get_expense_category_summary(app, args):
     start_date, end_date = params.get_date_range_params(args)
     session = app.session
     query = (
@@ -48,7 +50,7 @@ def _get_expense_category_summary(app, account_id, args):
     ]
 
 
-def _get_income_category_summary(app, account_id, args):
+def _get_income_category_summary(app, args):
     start_date, end_date = params.get_date_range_params(args)
     session = app.session
     query = session.query(Category.id, Category.name, func.sum(Transaction.amount))
@@ -67,8 +69,8 @@ def _get_income_category_summary(app, account_id, args):
 def get_summary(app, account_id, args):
     return {
         'categorySummary': {
-            'expense': _get_expense_category_summary(app, account_id, args),
-            'income': _get_income_category_summary(app, account_id, args)
+            'expense': _get_expense_category_summary(app, args),
+            'income': _get_income_category_summary(app, args)
         }
     }
 

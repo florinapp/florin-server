@@ -7,7 +7,8 @@ from .fixtures.accounts import (td_chequing_account,
                                 cibc_savings_account,
                                 bmo_chequing_account,
                                 tangerine_credit_card_account,
-                                rogers_bank_credit_card_account)
+                                rogers_bank_credit_card_account,
+                                deleted_account)
 from .fixtures.categories import automobile, gasoline, insurance, mortgage, salary
 from .fixtures.transactions import create
 
@@ -27,6 +28,11 @@ def test_accounts_get___one_account(td_chequing_account):
         'accounts': [
             td_chequing_account
         ]}
+
+
+def test_accounts_get___by_id___deleted(deleted_account):
+    response = requests.get('http://localhost:7000/api/accounts/{}'.format(deleted_account['id']))
+    assert response.status_code == 404
 
 
 def test_accounts_get___ordered_by_institution_name_by_default(td_chequing_account,
