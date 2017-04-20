@@ -96,6 +96,13 @@ def put_accounts(account_id):
     return accounts.put(app, account_id, flask.request.json)
 
 
+@app.route('/api/accounts/<account_id>', methods=['DELETE'])
+@jsonify()
+@handle_exceptions
+def delete_accounts(account_id):
+    return accounts.delete(app, account_id)
+
+
 @app.route('/api/categories', methods=['GET'])
 @jsonify()
 @handle_exceptions

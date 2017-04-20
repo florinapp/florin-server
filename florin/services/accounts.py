@@ -112,3 +112,16 @@ def put(app, account_id, request_json):
         account_id = account.id
         account = get_by_id(app, account_id)
         return {'account': account.to_dict()}
+
+
+def delete(app, account_id):  # TODO: consider soft-delete
+    account = get_by_id(app, account_id)
+    session = app.session
+    session.delete(account)
+    try:
+        session.commit()
+    except:
+        session.rollback()
+        raise
+    else:
+        return {'accountId': account_id}

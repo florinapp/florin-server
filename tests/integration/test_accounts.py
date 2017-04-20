@@ -71,6 +71,11 @@ def test_accounts_update(tangerine_credit_card_account):
     assert response_json['account']['type'] == 'chequing'
 
 
+def test_accounts_delete(tangerine_credit_card_account):
+    response = requests.delete('http://localhost:7000/api/accounts/{}'.format(tangerine_credit_card_account['id']))
+    assert response.status_code == 200
+
+
 def test_accounts_get_category_summary___empty_account():
     response = requests.get('http://localhost:7000/api/accounts/_all/categorySummary')
     assert response.status_code == 200
