@@ -35,6 +35,7 @@ class Account(Base, ToDictMixin, SearchByIdMixin):
     signature = Column(String(64), nullable=True)  # TODO: remove
     deleted = Column(Boolean, nullable=False, default=False)
     balances = relationship('AccountBalance')
+    transactions = relationship('Transaction')
 
 
 class AccountBalance(Base, ToDictMixin):

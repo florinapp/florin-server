@@ -150,7 +150,9 @@ def test_transactions_delete(tangerine_credit_card_account):
     assert 10 == len(txns)
     response = requests.delete('http://localhost:7000/api/transactions/{}'.format(txns[0].id))
     assert response.status_code == 200
-    assert 9 == db.Transaction.session.query(db.Transaction).count()
+    db.Transaction.session.expunge_all()
+    t = db.Transaction.session.query(db.Transaction).filter_by(id=txns[0].id).one()
+    assert t.deleted is True
 
 
 def test_transactions_put___change_memo(tangerine_credit_card_account):

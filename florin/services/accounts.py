@@ -121,6 +121,11 @@ def delete(app, account_id):
     account = get_by_id(app, account_id)
     session = app.session
     account.deleted = True
+
+    for t in account.transactions:
+        t.deleted = True
+        session.add(t)
+
     session.add(account)
     try:
         session.commit()

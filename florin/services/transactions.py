@@ -91,13 +91,14 @@ def delete(app, transaction_id):
         raise exceptions.ResourceNotFound()
 
     transaction = query.one()
-    app.session.delete(transaction)
+    transaction.deleted = True
+    app.session.add(transaction)
     try:
         app.session.commit()
     except:
         app.session.rollback()
         raise
-    return {}
+    return {'transactionId': transaction_id}
 
 
 def update(app, transaction_id, request_json):
