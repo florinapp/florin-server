@@ -3,7 +3,7 @@ from collections import defaultdict
 from .exceptions import ResourceNotFound, InvalidRequest
 from . import params
 from florin.db import Account, Transaction, Category
-from sqlalchemy import func, and_
+from sqlalchemy import func, and_, not_
 
 
 ALL_ACCOUNTS = object()
@@ -14,8 +14,7 @@ def get_by_id(app, account_id):
         return ALL_ACCOUNTS
 
     query = app.session.query(Account).filter(and_(
-        Account.deleted == False,
-        Account.id == account_id))
+        not_(Account.deleted), Account.id == account_id))
     if query.count() != 1:
         raise ResourceNotFound()
 
@@ -77,7 +76,7 @@ def get_summary(app, account_id, args):
 
 def get(app):
     query = app.session.query(Account) \
-        .filter_by(deleted=False) \
+        .filter(not_(Account.deleted)) \
         .order_by(Account.institution.desc())  # TODO: why desc?
     accounts = query.all()
     return {
