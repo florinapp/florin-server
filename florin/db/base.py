@@ -61,6 +61,7 @@ class Transaction(Base, ToDictMixin, SearchByIdMixin):
     transaction_type = Column(String, nullable=False)
     account_id = Column(Integer, ForeignKey('accounts.id'), nullable=True)
     checksum = Column(String(128), nullable=False, unique=True)
+    deleted = Column(Boolean, nullable=False, default=False)
 
     @staticmethod
     def _calculate_checksum(attrs):

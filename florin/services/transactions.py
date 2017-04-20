@@ -4,7 +4,7 @@ from asbool import asbool
 from .params import get_date_range_params
 from .categories import TBD_CATEGORY_ID, INTERNAL_TRANSFER_CATEGORY_ID
 from . import accounts, exceptions
-from sqlalchemy import and_
+from sqlalchemy import and_, not_
 
 
 class Paginator(object):
@@ -75,7 +75,7 @@ def get(app, account_id, args):
 
     query = reduce(lambda query, fn: fn(query),
                    [filter, sorter, paginator],
-                   session.query(Transaction))
+                   session.query(Transaction).filter(not_(Transaction.deleted)))
     transactions = query.all()
 
     return {
