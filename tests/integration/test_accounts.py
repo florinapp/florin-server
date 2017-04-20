@@ -84,7 +84,27 @@ def test_accounts_delete(tangerine_credit_card_account):
     assert response.status_code == 200
     session = db.Account.session
     account = session.query(db.Account).filter_by(id=tangerine_credit_card_account['id']).one()
-    assert account.deleted == True
+    assert account.deleted is True
+
+
+def test_accounts_delete___transactions_also_marks_as_deleted(tangerine_credit_card_account, automobile, gasoline):
+    txns = [
+        create(account_id=tangerine_credit_card_account['id'], category_id=automobile['id'],
+               transaction_type='debit', amount=Decimal('10')),
+        create(account_id=tangerine_credit_card_account['id'], category_id=automobile['id'],
+               transaction_type='debit', amount=Decimal('20')),
+        create(account_id=tangerine_credit_card_account['id'], category_id=gasoline['id'],
+               transaction_type='debit', amount=Decimal('30')),
+    ]
+    response = requests.delete('http://localhost:7000/api/accounts/{}'.format(tangerine_credit_card_account['id']))
+    assert response.status_code == 200
+
+    session = db.Account.session
+    account = session.query(db.Account).filter_by(id=tangerine_credit_card_account['id']).one()
+    assert account.deleted is True
+
+    txns = session.query(db.Transaction).filter_by(account_id=tangerine_credit_card_account['id']).all()
+    assert all([t.deleted for t in txns])
 
 
 def test_accounts_get_category_summary___empty_account():
