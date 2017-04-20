@@ -2,6 +2,7 @@ import json
 import requests
 from decimal import Decimal
 from florin.services.categories import INTERNAL_TRANSFER_CATEGORY_ID
+from florin import db
 from .utils import reset_database
 from .fixtures.accounts import (td_chequing_account,
                                 cibc_savings_account,
@@ -37,7 +38,8 @@ def test_accounts_get___by_id___deleted(deleted_account):
 
 def test_accounts_get___ordered_by_institution_name_by_default(td_chequing_account,
                                                                cibc_savings_account,
-                                                               bmo_chequing_account):
+                                                               bmo_chequing_account,
+                                                               deleted_account):
     response = requests.get('http://localhost:7000/api/accounts')
     names = [r['institution'] for r in response.json()['accounts']]
     assert names == ['TD', 'CIBC', 'BMO']
@@ -80,6 +82,9 @@ def test_accounts_update(tangerine_credit_card_account):
 def test_accounts_delete(tangerine_credit_card_account):
     response = requests.delete('http://localhost:7000/api/accounts/{}'.format(tangerine_credit_card_account['id']))
     assert response.status_code == 200
+    session = db.Account.session
+    account = session.query(db.Account).filter_by(id=tangerine_credit_card_account['id']).one()
+    assert account.deleted == True
 
 
 def test_accounts_get_category_summary___empty_account():

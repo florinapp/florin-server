@@ -76,7 +76,9 @@ def get_summary(app, account_id, args):
 
 
 def get(app):
-    query = app.session.query(Account).order_by(Account.institution.desc())  # TODO: why desc?
+    query = app.session.query(Account) \
+        .filter_by(deleted=False) \
+        .order_by(Account.institution.desc())  # TODO: why desc?
     accounts = query.all()
     return {
         'accounts': [account.to_dict() for account in accounts]
@@ -116,10 +118,11 @@ def put(app, account_id, request_json):
         return {'account': account.to_dict()}
 
 
-def delete(app, account_id):  # TODO: consider soft-delete
+def delete(app, account_id):
     account = get_by_id(app, account_id)
     session = app.session
-    session.delete(account)
+    account.deleted = True
+    session.add(account)
     try:
         session.commit()
     except:
