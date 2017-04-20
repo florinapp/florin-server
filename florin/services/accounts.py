@@ -95,3 +95,20 @@ def post(app, request_json):
         account_id = account.id
         account = get_by_id(app, account_id)
         return {'account': account.to_dict()}
+
+
+def put(app, account_id, request_json):
+    account = get_by_id(app, account_id)
+    session = app.session
+    try:
+        for key, value in request_json['account'].items():
+            setattr(account, key, value)
+        session.add(account)
+        session.commit()
+    except Exception as e:
+        session.rollback()
+        raise InvalidRequest(str(e))
+    else:
+        account_id = account.id
+        account = get_by_id(app, account_id)
+        return {'account': account.to_dict()}

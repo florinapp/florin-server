@@ -1,9 +1,6 @@
 import json
-import datetime
-import os
 import requests
 from decimal import Decimal
-from florin import db
 from florin.services.categories import INTERNAL_TRANSFER_CATEGORY_ID
 from .utils import reset_database
 from .fixtures.accounts import (td_chequing_account,
@@ -51,6 +48,23 @@ def test_accounts_new():
                                  }
                              }))
     assert response.status_code == 201
+    response_json = response.json()
+    assert response_json['account']['institution'] == 'BAH'
+    assert response_json['account']['name'] == 'DOH'
+    assert response_json['account']['type'] == 'chequing'
+
+
+def test_accounts_update(tangerine_credit_card_account):
+    response = requests.put('http://localhost:7000/api/accounts/{}'.format(tangerine_credit_card_account['id']),
+                             headers={'content-type': 'application/json'},
+                             data=json.dumps({
+                                 'account': {
+                                     'institution': 'BAH',
+                                     'name': 'DOH',
+                                     'type': 'chequing',
+                                 }
+                             }))
+    assert response.status_code == 200
     response_json = response.json()
     assert response_json['account']['institution'] == 'BAH'
     assert response_json['account']['name'] == 'DOH'

@@ -89,6 +89,13 @@ def post_accounts():
     return accounts.post(app, flask.request.json)
 
 
+@app.route('/api/accounts/<account_id>', methods=['PUT'])
+@jsonify()
+@handle_exceptions
+def put_accounts(account_id):
+    return accounts.put(app, account_id, flask.request.json)
+
+
 @app.route('/api/categories', methods=['GET'])
 @jsonify()
 @handle_exceptions
