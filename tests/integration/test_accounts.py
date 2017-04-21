@@ -1,6 +1,8 @@
 import json
 import requests
 from decimal import Decimal
+import datetime
+from datetime import timedelta
 from florin.services.categories import INTERNAL_TRANSFER_CATEGORY_ID
 from florin import db
 from .utils import reset_database
@@ -165,8 +167,11 @@ def test_accounts_get_category_summary(tangerine_credit_card_account,
 
 
 def test_account_balances___get(tangerine_credit_card_account, rogers_bank_credit_card_account):  # noqa
-    [balance_create(account_id=tangerine_credit_card_account['id']) for _ in xrange(3)]
-    [balance_create(account_id=rogers_bank_credit_card_account['id']) for _ in xrange(4)]
+    today = datetime.datetime.utcnow().date()
+    [balance_create(account_id=tangerine_credit_card_account['id'],
+                    date=today + timedelta(days=i)) for i in xrange(3)]
+    [balance_create(account_id=rogers_bank_credit_card_account['id'],
+                    date=today + timedelta(days=-1 * i)) for i in xrange(4)]
 
     response = requests.get('http://localhost:7000/api/accounts/_all/balances')
     assert response.status_code == 200

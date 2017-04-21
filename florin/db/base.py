@@ -2,7 +2,8 @@ import hashlib
 import sqlalchemy
 from sqlalchemy.orm import sessionmaker, relationship
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import Column, Integer, String, ForeignKey, Date, Float, UnicodeText, DateTime, Text, Boolean
+from sqlalchemy import (
+    Column, Integer, String, ForeignKey, Date, Float, UnicodeText, DateTime, Text, Boolean, UniqueConstraint)
 
 
 Base = declarative_base()
@@ -54,13 +55,13 @@ class Account(Base, ToDictMixin, SearchByIdMixin, QueryMixin):
 
 class AccountBalance(Base, ToDictMixin):
     __tablename__ = 'account_balances'
+    __table_args__ = (UniqueConstraint('account_id', 'date', name='unique_account_id_and_date'),)
     __export__ = ['id', 'account_id', 'date', 'balance']
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     account_id = Column(Integer, ForeignKey('accounts.id'), nullable=False)
     date = Column(Date, nullable=False)
     balance = Column(Float(as_decimal=True), nullable=False)
-
 
 class Transaction(Base, ToDictMixin, SearchByIdMixin, QueryMixin):
     __tablename__ = 'transactions'

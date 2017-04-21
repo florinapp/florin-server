@@ -125,6 +125,10 @@ def link(app, file_upload_id, request_json):
     session.add(account_balance)
     try:
         session.commit()
+    except IntegrityError:
+        logger.info('Already a record of account balance for account {} on {}'.format(account_balance.account_id,
+                                                                                      account_balance.date))
+        session.rollback()
     except:
         session.rollback()
         raise
