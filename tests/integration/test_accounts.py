@@ -165,13 +165,11 @@ def test_accounts_get_category_summary(tangerine_credit_card_account,
 
 
 def test_account_balances___get(tangerine_credit_card_account, rogers_bank_credit_card_account):  # noqa
-    for _ in xrange(3):
-        balance_create(account_id=tangerine_credit_card_account['id'])
-
-    for _ in xrange(4):
-        balance_create(account_id=rogers_bank_credit_card_account['id'])
+    [balance_create(account_id=tangerine_credit_card_account['id']) for _ in xrange(3)]
+    [balance_create(account_id=rogers_bank_credit_card_account['id']) for _ in xrange(4)]
 
     response = requests.get('http://localhost:7000/api/accounts/_all/balances')
     assert response.status_code == 200
     response_json = response.json()['accountBalances']
     assert 2 == len(response_json)
+    assert sorted([len(r['balances']) for r in response_json]) == [3, 4]
