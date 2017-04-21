@@ -46,6 +46,8 @@ class MyJSONEncoder(JSONEncoder):
             return str(round(Decimal(str(obj)), 2))
         if isinstance(obj, datetime.date):
             return obj.strftime('%Y-%m-%d')
+        if isinstance(obj, db.ToDictMixin):
+            return obj.to_dict()
 
         return super(MyJSONEncoder, self).default(obj)
 
@@ -136,3 +138,12 @@ def update_transaction(transaction_id):
 @handle_exceptions
 def delete_transaction(transaction_id):
     return transactions.delete(app, transaction_id)
+
+
+@app.route('/api/accounts/<account_id>/balances', methods=['GET'])
+@jsonify()
+@handle_exceptions
+def get_account_balances(account_id):
+    if account_id != '_all':
+        raise exceptions.InvalidRequest('Currently only "_all" is supported for account_id')
+    return accounts.get_balances(app)

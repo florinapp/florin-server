@@ -12,6 +12,7 @@ from .fixtures.accounts import (td_chequing_account,
                                 deleted_account)
 from .fixtures.categories import automobile, gasoline, insurance, mortgage, salary
 from .fixtures.transactions import create
+from .fixtures.account_balances import create as balance_create
 
 
 def setup_function(function):
@@ -161,3 +162,16 @@ def test_accounts_get_category_summary(tangerine_credit_card_account,
     ]
     assert response_json['categorySummary']['income'] == expected_income
     assert response_json['categorySummary']['expense'] == expected_expense
+
+
+def test_account_balances___get(tangerine_credit_card_account, rogers_bank_credit_card_account):  # noqa
+    for _ in xrange(3):
+        balance_create(account_id=tangerine_credit_card_account['id'])
+
+    for _ in xrange(4):
+        balance_create(account_id=rogers_bank_credit_card_account['id'])
+
+    response = requests.get('http://localhost:7000/api/accounts/_all/balances')
+    assert response.status_code == 200
+    response_json = response.json()['accountBalances']
+    assert 2 == len(response_json)

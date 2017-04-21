@@ -11,10 +11,18 @@ Base = declarative_base()
 class ToDictMixin(object):
     __export__ = []  # subclass must define
 
-    def to_dict(self):
+    def _get_value(self, key):
+        try:
+            return self.__dict__[key]
+        except KeyError:
+            return getattr(self, key)
+
+    def to_dict(self, extra_fields=None):
         assert hasattr(self, '__export__')
+        total_fields = list(self.__export__)
+        total_fields.extend(extra_fields or [])
         return {
-            k: self.__dict__[k] for k in self.__export__
+            k: self._get_value(k) for k in total_fields
         }
 
 
@@ -24,7 +32,13 @@ class SearchByIdMixin(object):
         return cls.session.query(cls).filter_by(id=id).one()
 
 
-class Account(Base, ToDictMixin, SearchByIdMixin):
+class QueryMixin(object):
+    @classmethod
+    def query(cls):
+        return cls.session.query(cls)
+
+
+class Account(Base, ToDictMixin, SearchByIdMixin, QueryMixin):
     __tablename__ = 'accounts'
     __export__ = ['id', 'institution', 'name', 'type']
 
@@ -34,7 +48,7 @@ class Account(Base, ToDictMixin, SearchByIdMixin):
     type = Column(String(32), nullable=False)
     signature = Column(String(64), nullable=True)  # TODO: remove
     deleted = Column(Boolean, nullable=False, default=False)
-    balances = relationship('AccountBalance')
+    balances = relationship('AccountBalance', order_by='AccountBalance.date')
     transactions = relationship('Transaction')
 
 
@@ -48,7 +62,7 @@ class AccountBalance(Base, ToDictMixin):
     balance = Column(Float(as_decimal=True), nullable=False)
 
 
-class Transaction(Base, ToDictMixin, SearchByIdMixin):
+class Transaction(Base, ToDictMixin, SearchByIdMixin, QueryMixin):
     __tablename__ = 'transactions'
     __export__ = ['id', 'date', 'info', 'payee', 'memo', 'amount', 'transaction_type', 'category_id']
 

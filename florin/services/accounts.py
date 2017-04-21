@@ -9,6 +9,15 @@ from sqlalchemy import func, and_, not_
 ALL_ACCOUNTS = object()
 
 
+def get_balances(app):
+    accounts = Account.query().filter(not_(Account.deleted)).all()
+    return {
+        'accountBalances': [
+            account.to_dict(extra_fields=['balances']) for account in accounts
+        ]
+    }
+
+
 def get_by_id(app, account_id):
     if account_id == '_all':
         return ALL_ACCOUNTS
