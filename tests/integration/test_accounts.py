@@ -64,14 +64,14 @@ def test_accounts_new():
 
 def test_accounts_update(tangerine_credit_card_account):
     response = requests.put('http://localhost:7000/api/accounts/{}'.format(tangerine_credit_card_account['id']),
-                             headers={'content-type': 'application/json'},
-                             data=json.dumps({
-                                 'account': {
-                                     'institution': 'BAH',
-                                     'name': 'DOH',
-                                     'type': 'chequing',
-                                 }
-                             }))
+                            headers={'content-type': 'application/json'},
+                            data=json.dumps({
+                                'account': {
+                                    'institution': 'BAH',
+                                    'name': 'DOH',
+                                    'type': 'chequing',
+                                }
+                            }))
     assert response.status_code == 200
     response_json = response.json()
     assert response_json['account']['institution'] == 'BAH'
@@ -135,7 +135,6 @@ def test_accounts_get_category_summary(tangerine_credit_card_account,
            transaction_type='credit', amount=Decimal('1500'))
     create(account_id=td_chequing_account['id'], category_id=INTERNAL_TRANSFER_CATEGORY_ID,
            transaction_type='other', amount=Decimal('2500'))
-
 
     response = requests.get('http://localhost:7000/api/accounts/_all/categorySummary')
     assert response.status_code == 200

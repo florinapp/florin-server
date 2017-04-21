@@ -1,4 +1,3 @@
-import os
 from florin.db import Base, get_engine, init
 
 
@@ -12,7 +11,6 @@ class TestApp(object):
 app = TestApp()
 
 
-from florin.db import get_engine, Base
 engine = get_engine(TEST_DBFILE)
 Base.metadata.create_all(engine)
 init(app, TEST_DBFILE)

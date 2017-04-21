@@ -4,7 +4,7 @@ import requests
 from florin import db
 from .utils import reset_database
 from .fixtures.transactions import create, fake
-from .fixtures.accounts import tangerine_credit_card_account, rogers_bank_credit_card_account
+from .fixtures.accounts import tangerine_credit_card_account, rogers_bank_credit_card_account  # noqa
 
 
 def setup_function(function):
@@ -48,8 +48,8 @@ def test_transactions_get___pagination___edge_case(tangerine_credit_card_account
     assert response_json['total_pages'] == 3
 
 
-def test_transactions_get___transactions_from_multiple_accounts_are_available_under_all(  # noqa
-        tangerine_credit_card_account, rogers_bank_credit_card_account):
+def test_transactions_get___transactions_from_multiple_accounts_are_available_under_all(
+        tangerine_credit_card_account, rogers_bank_credit_card_account):  # noqa
     for _ in xrange(5):
         create(account_id=tangerine_credit_card_account['id'])
     for _ in xrange(5):
