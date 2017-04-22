@@ -144,6 +144,11 @@ def delete_transaction(transaction_id):
 @jsonify()
 @handle_exceptions
 def get_account_balances(account_id):
-    if account_id != '_all':
-        raise exceptions.InvalidRequest('Currently only "_all" is supported for account_id')
-    return accounts.get_balances(app)
+    return accounts.get_balances(app, account_id)
+
+
+@app.route('/api/accounts/<account_id>/balances', methods=['POST'])
+@jsonify()
+@handle_exceptions
+def post_account_balances(account_id):
+    return accounts.post_balances(app, account_id, flask.request.json)

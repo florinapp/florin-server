@@ -1,21 +1,58 @@
+import datetime
 import operator
 from collections import defaultdict
+from decimal import Decimal, InvalidOperation
 from .exceptions import ResourceNotFound, InvalidRequest
 from . import params
-from florin.db import Account, Transaction, Category
+from florin.db import Account, AccountBalance, Transaction, Category
 from sqlalchemy import func, and_, not_
 
 
 ALL_ACCOUNTS = object()
 
 
-def get_balances(app):
+def get_balances(app, account_id):
+    if account_id != '_all':
+        raise InvalidRequest('Currently only "_all" is supported for account_id')
     accounts = Account.query().filter(not_(Account.deleted)).all()
     return {
         'accountBalances': [
             account.to_dict(extra_fields=['balances']) for account in accounts
         ]
     }
+
+
+def post_balances(app, account_id, request_json):
+    if account_id == '_all':
+        raise InvalidRequest('Invalid account_id')
+
+    account = get_by_id(app, account_id)
+
+    date = request_json.get('date')
+    if date is None:
+        raise InvalidRequest("Invalid field 'date'")
+    try:
+        date = datetime.datetime.strptime(date, '%Y-%m-%d')
+    except ValueError:
+        raise InvalidRequest("Invalid field 'date'")
+
+    balance = request_json.get('balance')
+    if balance is None:
+        raise InvalidRequest("Invalid field 'balance'")
+    try:
+        balance = Decimal(balance)
+    except InvalidOperation:
+        raise InvalidRequest("Invalid field 'balance'")
+
+    account_balance = AccountBalance(account_id=account_id, date=date, balance=balance)
+    app.session.add(account_balance)
+    try:
+        app.session.commit()
+    except:
+        app.session.rollback()
+        raise
+    else:
+        return {'account_id': account_id, 'id': account_balance.id}
 
 
 def get_by_id(app, account_id):
