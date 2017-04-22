@@ -38,6 +38,7 @@ def _get_expense_category_summary(app, args):
         .join(Transaction, Transaction.category_id == Category.id)
         .filter(and_(Transaction.date >= start_date, Transaction.date <= end_date))
         .filter(Category.type == 'expense')
+        .filter(not_(Transaction.deleted))
         .group_by(Category.id)
     )
 
@@ -61,12 +62,14 @@ def _get_expense_category_summary(app, args):
 def _get_income_category_summary(app, args):
     start_date, end_date = params.get_date_range_params(args)
     session = app.session
-    query = session.query(Category.id, Category.name, func.sum(Transaction.amount))
-    query = query.filter(and_(Transaction.date >= start_date,
-                              Transaction.date <= end_date))
-    query = query.filter(Transaction.category_id == Category.id)
-    query = query.filter(Category.type == 'income')
-    query = query.group_by(Category.id)
+    query = (
+        session.query(Category.id, Category.name, func.sum(Transaction.amount))
+        .filter(and_(Transaction.date >= start_date, Transaction.date <= end_date))
+        .filter(Transaction.category_id == Category.id)
+        .filter(Category.type == 'income')
+        .filter(not_(Transaction.deleted))
+        .group_by(Category.id)
+    )
 
     return [
         {'category_id': category_id, 'category_name': category_name, 'amount': abs(amount)}
