@@ -53,7 +53,7 @@ class Account(Base, ToDictMixin, SearchByIdMixin, QueryMixin):
     transactions = relationship('Transaction')
 
 
-class AccountBalance(Base, ToDictMixin, SearchByIdMixin):
+class AccountBalance(Base, ToDictMixin, SearchByIdMixin, QueryMixin):
     __tablename__ = 'account_balances'
     __table_args__ = (UniqueConstraint('account_id', 'date', name='unique_account_id_and_date'),)
     __export__ = ['id', 'account_id', 'date', 'balance']
@@ -62,6 +62,7 @@ class AccountBalance(Base, ToDictMixin, SearchByIdMixin):
     account_id = Column(Integer, ForeignKey('accounts.id'), nullable=False)
     date = Column(Date, nullable=False)
     balance = Column(Float(as_decimal=True), nullable=False)
+
 
 class Transaction(Base, ToDictMixin, SearchByIdMixin, QueryMixin):
     __tablename__ = 'transactions'

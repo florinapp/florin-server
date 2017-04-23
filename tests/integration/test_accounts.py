@@ -178,3 +178,11 @@ def test_account_balances___get(tangerine_credit_card_account, rogers_bank_credi
     response_json = response.json()['accountBalances']
     assert 2 == len(response_json)
     assert sorted([len(r['balances']) for r in response_json]) == [3, 4]
+
+
+def test_account_balances___delete_account_id_and_balance_id_not_match(rogers_bank_credit_card_account):
+    balance_create(account_id=rogers_bank_credit_card_account['id'])
+    balances = db.AccountBalance.query().all()
+    assert len(balances) == 1
+    response = requests.delete('http://localhost:7000/api/accounts/{}/balances{}'.format(999, balances[0].id))
+    assert response.status_code == 404
