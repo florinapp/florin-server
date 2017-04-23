@@ -152,3 +152,10 @@ def get_account_balances(account_id):
 @handle_exceptions
 def post_account_balances(account_id):
     return accounts.post_balances(app, account_id, flask.request.json)
+
+
+@app.route('/api/accounts/<account_id>/balances/<id>', methods=['DELETE'])
+@jsonify()
+@handle_exceptions
+def delete_account_balances(account_id, id):
+    return accounts.delete_balances(app, account_id, id)

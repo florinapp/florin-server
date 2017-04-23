@@ -55,6 +55,19 @@ def post_balances(app, account_id, request_json):
         return {'account_id': account_id, 'id': account_balance.id}
 
 
+def delete_balances(app, account_id, id):
+    account_balance = AccountBalance.get_by_id(id)
+    if account_balance.account_id != int(account_id):
+        raise ResourceNotFound()
+    app.session.delete(account_balance)
+    try:
+        app.session.commit()
+    except:
+        app.session.rollback()
+        raise
+    return {'account_id': account_id, 'id': id}
+
+
 def get_by_id(app, account_id):
     if account_id == '_all':
         return ALL_ACCOUNTS
