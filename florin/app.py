@@ -7,7 +7,7 @@ from decimal import Decimal
 from flask_cors import CORS
 from flask.json import JSONEncoder
 from . import db
-from .services import transactions, exceptions, accounts, categories, uploads
+from .services import charts, transactions, exceptions, accounts, categories, uploads
 
 
 logging.basicConfig(level='DEBUG')
@@ -159,3 +159,10 @@ def post_account_balances(account_id):
 @handle_exceptions
 def delete_account_balances(account_id, id):
     return accounts.delete_balances(app, account_id, id)
+
+
+@app.route('/api/charts/accountBalances', methods=['GET'])
+@jsonify()
+@handle_exceptions
+def get_account_balance_chart_data():
+    return charts.get_account_balance_chart_data(app, flask.request.args)
