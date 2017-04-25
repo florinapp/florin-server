@@ -1,3 +1,4 @@
+import os
 from invoke import task
 
 
@@ -50,11 +51,13 @@ def clean(ctx):
 
 @task
 def run(ctx, dbfile='florin.sqlite', port=9000):
-    # TODO: change to os.execvp
-    ctx.run('DBFILE={} '
-            'gunicorn --access-logfile=- --error-logfile=- --timeout=9999 '
-            '-b 0.0.0.0:{} --reload florin.app:app'.format(dbfile, port),
-            pty=True)
+    command = [
+        'gunicorn', '--access-logfile=-', '--error-logfile=-',
+        '--timeout=9999', '-b 0.0.0.0:{}'.format(port), '--reload',
+        'florin.app:app'
+    ]
+    os.environ['DBFILE'] = dbfile
+    os.execvpe(command[0], command[:], os.environ)
 
 
 @task
