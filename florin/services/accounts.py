@@ -4,7 +4,7 @@ from collections import defaultdict
 from decimal import Decimal, InvalidOperation
 from .exceptions import ResourceNotFound, InvalidRequest
 from . import params
-from florin.db import Account, AccountBalance, Transaction, Category
+from florin.db import Account, AccountBalance, Transaction, Category, db_transaction
 from sqlalchemy import func, and_, not_
 
 
@@ -44,27 +44,18 @@ def post_balances(app, account_id, request_json):
     except InvalidOperation:
         raise InvalidRequest("Invalid field 'balance'")
 
-    account_balance = AccountBalance(account_id=account_id, date=date, balance=balance)
-    app.session.add(account_balance)
-    try:
-        app.session.commit()
-    except:
-        app.session.rollback()
-        raise
-    else:
-        return {'account_id': account_id, 'id': account_balance.id}
+    with db_transaction(app.session) as session:
+        account_balance = AccountBalance(account_id=account_id, date=date, balance=balance)
+        session.add(account_balance)
+    return {'account_id': account.id, 'id': account_balance.id}
 
 
 def delete_balances(app, account_id, id):
     account_balance = AccountBalance.get_by_id(id)
     if account_balance.account_id != int(account_id):
         raise ResourceNotFound()
-    app.session.delete(account_balance)
-    try:
-        app.session.commit()
-    except:
-        app.session.rollback()
-        raise
+    with db_transaction(app.session) as session:
+        session.delete(account_balance)
     return {'account_id': account_id, 'id': id}
 
 
@@ -147,14 +138,12 @@ def get(app):
 
 
 def post(app, request_json):
-    session = app.session
     try:
-        request_json['account']['id'] = None
-        account = Account(**request_json['account'])
-        session.add(account)
-        session.commit()
+        with db_transaction(app.session) as session:
+            request_json['account']['id'] = None
+            account = Account(**request_json['account'])
+            session.add(account)
     except Exception as e:
-        session.rollback()
         raise InvalidRequest(str(e))
     else:
         account_id = account.id
@@ -164,14 +153,12 @@ def post(app, request_json):
 
 def put(app, account_id, request_json):
     account = get_by_id(app, account_id)
-    session = app.session
     try:
-        for key, value in request_json['account'].items():
-            setattr(account, key, value)
-        session.add(account)
-        session.commit()
+        with db_transaction(app.session) as session:
+            for key, value in request_json['account'].items():
+                setattr(account, key, value)
+            session.add(account)
     except Exception as e:
-        session.rollback()
         raise InvalidRequest(str(e))
     else:
         account_id = account.id
@@ -181,18 +168,10 @@ def put(app, account_id, request_json):
 
 def delete(app, account_id):
     account = get_by_id(app, account_id)
-    session = app.session
-    account.deleted = True
-
-    for t in account.transactions:
-        t.deleted = True
-        session.add(t)
-
-    session.add(account)
-    try:
-        session.commit()
-    except:
-        session.rollback()
-        raise
-    else:
-        return {'accountId': account_id}
+    with db_transaction(app.session) as session:
+        account.deleted = True
+        for t in account.transactions:
+            t.deleted = True
+            session.add(t)
+        session.add(account)
+    return {'accountId': account_id}

@@ -1,3 +1,4 @@
+import contextlib
 import hashlib
 import sqlalchemy
 from sqlalchemy.orm import sessionmaker, relationship
@@ -126,3 +127,13 @@ def init(app, dbfile):
     session = sessionmaker(bind=engine)()
     Base.session = session
     app.session = session
+
+
+@contextlib.contextmanager
+def db_transaction(session):
+    try:
+        yield session
+        session.commit()
+    except:
+        session.rollback()
+        raise

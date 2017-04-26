@@ -31,6 +31,7 @@ def run_image(ctx, test=False, port=9000):
             '-v $(pwd)/{db}:/app/{db}'.format(db='test.sqlite'),
             '-v $(pwd)/requirements.txt:/app/requirements.txt',
             '-v $(pwd)/requirements-dev.txt:/app/requirements-dev.txt',
+            '-v $(pwd)/tests:/app/tests',
             '--env DBFILE=test.sqlite',
         ]
     else:
@@ -40,8 +41,9 @@ def run_image(ctx, test=False, port=9000):
         ]
 
     ctx.run('docker run -d {volume_mappings} '
-            '-p {port}:9000 florin-server'.format(volume_mappings=' '.join(volume_mappings),
-                                                  port=port))
+            '-p {port}:{port} florin-server inv run --port {port}'.format(volume_mappings=' '.join(volume_mappings),
+                                                                          port=port),
+            echo=True)
 
 
 @task

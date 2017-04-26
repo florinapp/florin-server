@@ -3,7 +3,7 @@ import hashlib
 import base64
 import datetime
 from .exceptions import InvalidRequest, ResourceNotFound
-from florin.db import FileUpload, Transaction, Account, AccountBalance
+from florin.db import FileUpload, Transaction, Account, AccountBalance, db_transaction
 from ofxparse import OfxParser
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.exc import IntegrityError
@@ -51,12 +51,8 @@ def upload(app, files):
                              file_content=base64.b64encode(file_storage.read()),
                              account_signature=account_signature)
 
-    session.add(file_upload)
-    try:
-        session.commit()
-    except:
-        session.rollback()
-        raise
+    with db_transaction(session):
+        session.add(file_upload)
 
     # TODO: match an existing account and return the account_id
     return {'id': file_upload.id, 'signature': account_signature}
@@ -79,12 +75,8 @@ def link(app, file_upload_id, request_json):
             name='Unnamed',
             type='N/A',
         )
-        session.add(account)
-        try:
-            session.commit()
-        except:
-            session.rollback()
-            raise
+        with db_transaction(session):
+            session.add(account)
     else:
         try:
             account = Account.get_by_id(account_id)
@@ -105,12 +97,11 @@ def link(app, file_upload_id, request_json):
                                   transaction_type=t.type,
                                   category_id=TBD_CATEGORY_ID,
                                   account_id=account.id)
-        session.add(transaction)
         try:
-            session.commit()
-            total_imported += 1
+            with db_transaction(session):
+                session.add(transaction)
+                total_imported += 1
         except IntegrityError:
-            session.rollback()
             total_skipped += 1
             logger.warn('Skip duplicated transaction: {}. checksum: {}'.format(transaction, transaction.checksum))
 
@@ -121,16 +112,13 @@ def link(app, file_upload_id, request_json):
         date=ofxfile.account.statement.balance_date,
         balance=ofxfile.account.statement.balance
     )
-    session.add(file_upload)
-    session.add(account_balance)
+
     try:
-        session.commit()
+        with db_transaction(session):
+            session.add(file_upload)
+            session.add(account_balance)
     except IntegrityError:
         logger.info('Already a record of account balance for account {} on {}'.format(account_balance.account_id,
                                                                                       account_balance.date))
-        session.rollback()
-    except:
-        session.rollback()
-        raise
 
     return {'account_id': account.id, 'total_imported': total_imported, 'total_skipped': total_skipped}

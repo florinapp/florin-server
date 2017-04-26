@@ -1,5 +1,5 @@
 import math
-from florin.db import Transaction
+from florin.db import Transaction, db_transaction
 from asbool import asbool
 from .params import get_date_range_params
 from .categories import TBD_CATEGORY_ID, INTERNAL_TRANSFER_CATEGORY_ID
@@ -91,13 +91,9 @@ def delete(app, transaction_id):
         raise exceptions.ResourceNotFound()
 
     transaction = query.one()
-    transaction.deleted = True
-    app.session.add(transaction)
-    try:
-        app.session.commit()
-    except:
-        app.session.rollback()
-        raise
+    with db_transaction(app.session) as session:
+        transaction.deleted = True
+        session.add(transaction)
     return {'transactionId': transaction_id}
 
 
@@ -109,11 +105,8 @@ def update(app, transaction_id, request_json):
     transaction = query.one()
     for key, value in request_json.items():
         setattr(transaction, key, value)
-    app.session.add(transaction)
-    try:
-        app.session.commit()
-    except:
-        app.session.rollback()
-        raise
+
+    with db_transaction(app.session) as session:
+        session.add(transaction)
     transaction = app.session.query(Transaction).filter_by(id=transaction_id).one()
     return {'transactions': [transaction.to_dict()]}
