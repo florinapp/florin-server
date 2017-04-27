@@ -1,1 +1,1 @@
-web: inv run
+web: inv run --port 80
