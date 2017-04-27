@@ -4,11 +4,17 @@ from collections import defaultdict
 from decimal import Decimal, InvalidOperation
 from .exceptions import ResourceNotFound, InvalidRequest
 from . import params
-from florin.db import Account, AccountBalance, Transaction, Category, db_transaction
+from florin.db import Account, AccountBalance, AccountType, Transaction, Category, db_transaction
 from sqlalchemy import func, and_, not_
 
 
 ALL_ACCOUNTS = object()
+
+
+def get_types(app):
+    return {
+        'accountTypes': [type.to_dict() for type in AccountType.query().all()]
+    }
 
 
 def get_balances(app, account_id):

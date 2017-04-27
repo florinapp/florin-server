@@ -166,3 +166,10 @@ def delete_account_balances(account_id, id):
 @handle_exceptions
 def get_account_balance_chart_data():
     return charts.get_account_balance_chart_data(app, flask.request.args)
+
+
+@app.route('/api/accountTypes', methods=['GET'])
+@jsonify()
+@handle_exceptions
+def get_account_types():
+    return accounts.get_types(app)

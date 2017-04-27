@@ -47,11 +47,18 @@ class Account(Base, ToDictMixin, SearchByIdMixin, QueryMixin):
     id = Column(Integer, primary_key=True, autoincrement=True)
     institution = Column(String(64), nullable=False)
     name = Column(String(64), nullable=False)
-    type = Column(String(32), nullable=False)
+    type = Column(String(32), ForeignKey('account_types.name'), nullable=False)
     signature = Column(String(64), nullable=True)  # TODO: remove
     deleted = Column(Boolean, nullable=False, default=False)
     balances = relationship('AccountBalance', order_by='AccountBalance.date')
     transactions = relationship('Transaction')
+
+
+class AccountType(Base, ToDictMixin, QueryMixin):
+    __tablename__ = 'account_types'
+    __export__ = ['name']
+
+    name = Column(String, primary_key=True)
 
 
 class AccountBalance(Base, ToDictMixin, SearchByIdMixin, QueryMixin):
