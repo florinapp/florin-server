@@ -1,1 +1,1 @@
-web: inv run --port 9000
+web: inv run --port $PORT
