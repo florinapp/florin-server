@@ -129,9 +129,13 @@ def get_engine(dbfile):
     return sqlalchemy.create_engine('sqlite:///{}'.format(dbfile))
 
 
+def make_session(engine):
+    return sessionmaker(bind=engine)()
+
+
 def init(app, dbfile):
     engine = get_engine(dbfile)
-    session = sessionmaker(bind=engine)()
+    session = make_session(engine)
     Base.session = session
     app.session = session
 

@@ -4,9 +4,17 @@ from invoke import task
 
 @task
 def bootstrap(ctx, dbfile):
-    from florin.db import get_engine, Base
+    from florin.db import get_engine, make_session, Base, AccountType, db_transaction
     engine = get_engine(dbfile)
     Base.metadata.create_all(engine)
+    session = make_session(engine)
+    types = ['chequing', 'savings', 'credit', 'investment']
+    for type_ in types:
+        try:
+            with db_transaction(session):
+                session.add(AccountType(name=type_))
+        except:
+            continue
 
 
 @task
