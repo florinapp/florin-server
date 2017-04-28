@@ -4,9 +4,10 @@ from tests.integration import app
 
 def reset_database():
     session = app.session
-    for clazz in (db.Account, db.AccountBalance, db.Category, db.Transaction, db.FileUpload):
+    for clazz in (db.AccountBalance, db.Category, db.Transaction, db.Account, db.FileUpload):
         session.query(clazz).delete()
     session.commit()
+    session.expunge_all()
 
 
 def db_fixture(db_class):
