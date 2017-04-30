@@ -1,9 +1,12 @@
 import datetime
+from .params import get_date_range_params
 from florin.db import Account, Transaction
 from sqlalchemy import func, not_
 
 
 def get_account_balance_chart_data(app, args):
+    start_date, end_date = get_date_range_params(args)
+
     accounts = (
         Account.query()
         .filter(not_(Account.deleted))
@@ -38,6 +41,8 @@ def get_account_balance_chart_data(app, args):
             .filter(Transaction.account_id == account.id)
             .filter(not_(Transaction.deleted))
             .filter(Transaction.date <= latest_balance.date)
+            .filter(Transaction.date <= end_date)
+            .filter(Transaction.date >= start_date)
             .order_by(Transaction.date.desc())
             .group_by(Transaction.date)
         ).all()
