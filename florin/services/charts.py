@@ -17,23 +17,29 @@ def get_account_balance_chart_data(app, args):
     for account in accounts:
         account_history = {'account': account.to_dict(),
                            'history': []}
-        if len(account.balances) == 0:
+        balances_in_date_range = [
+            balance for balance in account.balances
+            if start_date <= balance.date <= end_date
+        ]
+
+        if not balances_in_date_range:
             continue
 
-        latest_balance = account.balances[-1]
-        if len(account.balances) == 1:
+        latest_balance = balances_in_date_range[-1]
+
+        if len(balances_in_date_range) == 1:
             account_history['history'].append({
                 'date': latest_balance.date,
                 'balance': latest_balance.balance
             })
-        if len(account.balances) > 1:
+        if len(balances_in_date_range) > 1:
             account_history['history'].append({
                 'date': latest_balance.date,
                 'balance': latest_balance.balance
             })
             account_history['history'].append({
-                'date': account.balances[0].date,
-                'balance': account.balances[0].balance
+                'date': balances_in_date_range[0].date,
+                'balance': balances_in_date_range[0].balance
             })
 
         delta_by_date = (
