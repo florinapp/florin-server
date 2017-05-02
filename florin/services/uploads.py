@@ -5,6 +5,7 @@ import datetime
 from .exceptions import InvalidRequest, ResourceNotFound
 from florin.db import FileUpload, Transaction, Account, AccountBalance, db_transaction
 from ofxparse import OfxParser
+from sqlalchemy import func
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.exc import IntegrityError
 from StringIO import StringIO
@@ -54,8 +55,31 @@ def upload(app, files):
     with db_transaction(session):
         session.add(file_upload)
 
-    # TODO: match an existing account and return the account_id
-    return {'id': file_upload.id, 'signature': account_signature}
+    query = (
+        FileUpload.query().with_entities(FileUpload.account_id, func.count(FileUpload.id))
+        .filter(FileUpload.account_id != None)  # noqa
+        .group_by(FileUpload.account_id)
+        .order_by(func.count(FileUpload.id).desc())
+    )
+    result = query.all()
+    if not result:
+        link = {
+            'accountId': None,
+            'confidenceIndex': None
+        }
+    else:
+        account_id = result[0][0]
+        confidence_index = 1.0 * result[0][1] / sum([r[1] for r in result])
+        link = {
+            'accountId': account_id,
+            'confidenceIndex': confidence_index
+        }
+
+    return {
+        'id': file_upload.id,
+        'signature': account_signature,
+        'link': link,
+    }
 
 
 def link(app, file_upload_id, request_json):

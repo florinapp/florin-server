@@ -2,10 +2,11 @@ import json
 import base64
 import os
 import requests
+import datetime
 from florin import db
 from .utils import reset_database
-from .fixtures.accounts import td_chequing_account
-from .fixtures.file_uploads import td_ofx
+from .fixtures.accounts import *  # noqa
+from .fixtures.file_uploads import *  # noqa
 
 
 def setup_function(function):
@@ -22,6 +23,26 @@ def test_uploads():
     file_upload = db.FileUpload.get_by_id(id)
     assert file_upload.filename == 'reports.ofx'
     assert file_upload.file_content == base64.b64encode(open(fixture_path, 'r').read())
+
+
+def test_uploads___suggest_account_to_link(td_chequing_account):
+    session = db.FileUpload.session
+    session.add(
+        db.FileUpload(filename='foo.ofx',
+                      uploaded_at=datetime.datetime.now(),
+                      file_content=base64.b64encode('foo'),
+                      account_id=td_chequing_account['id'],
+                      account_signature='sha256:c88ac2aa7726368e35babe6416886023074b41dc6aade81794e9230a8b655c5c'))
+    session.commit()
+    fixture_path = os.path.join(os.path.dirname(__file__), 'fixtures/reports.ofx')
+    response = requests.post('http://localhost:7000/api/fileUploads', files=[
+        ('reports.ofx', ('reports.ofx', open(fixture_path, 'r'), 'application/ofx'))
+    ])
+    assert response.status_code == 200
+    assert response.json()['link'] == {
+        'accountId': td_chequing_account['id'],
+        'confidenceIndex': 1.0
+    }
 
 
 def test_uploads___cannot_upload_more_than_one_file_at_a_time():

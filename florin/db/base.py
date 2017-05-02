@@ -114,7 +114,7 @@ class Category(Base, ToDictMixin, SearchByIdMixin):
     parent = relationship('Category', remote_side=[id])
 
 
-class FileUpload(Base, SearchByIdMixin):
+class FileUpload(Base, SearchByIdMixin, QueryMixin):
     __tablename__ = 'file_uploads'
 
     id = Column(Integer, primary_key=True, autoincrement=True)
