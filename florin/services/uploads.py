@@ -58,6 +58,7 @@ def upload(app, files):
     query = (
         FileUpload.query().with_entities(FileUpload.account_id, func.count(FileUpload.id))
         .filter(FileUpload.account_id != None)  # noqa
+        .filter(FileUpload.account_signature == account_signature)
         .group_by(FileUpload.account_id)
         .order_by(func.count(FileUpload.id).desc())
     )
