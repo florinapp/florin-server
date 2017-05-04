@@ -1,6 +1,9 @@
 import contextlib
 import hashlib
 import sqlalchemy
+import logging
+from florin.constants import TBD_CATEGORY_ID
+from sqlalchemy import func, not_
 from sqlalchemy.orm import sessionmaker, relationship
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import (
@@ -8,6 +11,9 @@ from sqlalchemy import (
 
 
 Base = declarative_base()
+
+
+logger = logging.getLogger(__name__)
 
 
 class ToDictMixin(object):
@@ -42,7 +48,7 @@ class QueryMixin(object):
 
 class Account(Base, ToDictMixin, SearchByIdMixin, QueryMixin):
     __tablename__ = 'accounts'
-    __export__ = ['id', 'institution', 'name', 'type']
+    __export__ = ['id', 'institution', 'name', 'type', 'uncategorized_transaction_count']
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     institution = Column(String(64), nullable=False)
@@ -52,6 +58,16 @@ class Account(Base, ToDictMixin, SearchByIdMixin, QueryMixin):
     deleted = Column(Boolean, nullable=False, default=False)
     balances = relationship('AccountBalance', order_by='AccountBalance.date')
     transactions = relationship('Transaction')
+
+    @property
+    def uncategorized_transaction_count(self):
+        query = (
+            self.session.query(func.count(Transaction.id))
+            .filter(Transaction.account_id == self.id)
+            .filter(not_(Transaction.deleted))
+            .filter(Transaction.category_id == TBD_CATEGORY_ID)
+        )
+        return query.one()[0]
 
 
 class AccountType(Base, ToDictMixin, QueryMixin):
@@ -92,7 +108,7 @@ class Transaction(Base, ToDictMixin, SearchByIdMixin, QueryMixin):
     def _calculate_checksum(attrs):
         fields = ['date', 'info', 'payee', 'memo', 'amount', 'transaction_type']
         sig = '&'.join([str(attrs[field]) for field in fields])
-        print(sig)
+        logging.info('Signature: {}'.format(sig))
         return 'sha256:{}'.format(hashlib.sha256(sig).hexdigest())
 
     def __init__(self, *args, **kwargs):
