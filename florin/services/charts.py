@@ -1,9 +1,32 @@
-import copy
 import datetime
 from decimal import Decimal
 from .params import get_date_range_params
 from florin.db import Account, Transaction
 from sqlalchemy import func, not_
+
+
+def _generate_account_histories(account_balance_by_date, accounts):
+    # reorganize account_balance_by_date into a list of account hisgtories
+    # account_balance_by_date is of the structure:
+    # { DATE: { ACCOUNT_ID: balance} }
+    retval = []
+
+    def find_account_history_by_id(account_id):
+        for account_history in retval:
+            if account_history.get('account')['id'] == account_id:
+                return account_history
+        return None
+
+    for date, data_points in sorted(account_balance_by_date.items()):
+        for account_id, data_point in data_points.items():
+            account_history = find_account_history_by_id(account_id)
+            if account_history:
+                account_history['history'].append(data_point)
+            else:
+                account_history = {'account': accounts[account_id],
+                                   'history': [data_point]}
+                retval.append(account_history)
+    return retval
 
 
 def retrofit(account_histories):
@@ -13,7 +36,6 @@ def retrofit(account_histories):
     # Output:
     #  All accounts have history data points on all dates included in the
     #  response
-    account_histories = copy.deepcopy(account_histories)
     accounts = {
         account_history['account']['id']: account_history['account']
         for account_history in account_histories
@@ -55,25 +77,7 @@ def retrofit(account_histories):
                 account_balance_by_date[date_point][account['id']] = {'date': date_point,
                                                                       'balance': balance}
 
-    retval = []
-
-    def find_account_history_by_id(account_id):
-        for account_history in retval:
-            if account_history.get('account')['id'] == account_id:
-                return account_history
-        return None
-
-    for date, data_points in sorted(account_balance_by_date.items()):
-        for account_id, data_point in data_points.items():
-            account_history = find_account_history_by_id(account_id)
-            if account_history:
-                account_history['history'].append(data_point)
-            else:
-                account_history = {'account': accounts[account_id],
-                                   'history': [data_point]}
-                retval.append(account_history)
-
-    return retval
+    return _generate_account_histories(account_balance_by_date, accounts)
 
 
 def get_account_balance_chart_data(app, args):
