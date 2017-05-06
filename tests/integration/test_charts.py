@@ -1,10 +1,10 @@
 import requests
 import datetime
 from decimal import Decimal
-from florin.db import Account, AccountBalance, Transaction
+from florin.db import Account, AccountBalance
 from .utils import reset_database
 from .fixtures.transactions import create, fake
-from .fixtures.accounts import tangerine_credit_card_account, rogers_bank_credit_card_account  # noqa
+from .fixtures.accounts import *  # noqa
 
 
 def setup_function(function):
