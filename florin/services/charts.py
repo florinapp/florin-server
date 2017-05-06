@@ -138,5 +138,5 @@ def get_account_balance_chart_data(app, args):
         account_history['history'].sort(key=lambda h: h['date'])
         response.append(account_history)
 
-    retrofit(response)
+    response = retrofit(response)
     return {'chartData': response}
