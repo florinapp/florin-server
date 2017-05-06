@@ -208,3 +208,33 @@ def test_retrofit___retrofit_account2_ending_point():
         ])
     ]
     assert actual_histories == expected_histories
+
+
+def test_retrofit___both_account_has_missing_points():
+    account_histories = [
+        _acct_history(1, [
+            _history_point('2017-01-01', '59.99'),
+            _history_point('2017-03-01', '159.99'),
+        ]),
+        _acct_history(2, [
+            _history_point('2017-01-01', '1.99'),
+            _history_point('2017-02-01', '159.99'),
+            _history_point('2017-04-01', '1.99'),
+        ]),
+    ]
+    actual_histories = retrofit(account_histories)
+    expected_histories = [
+        _acct_history(1, [
+            _history_point('2017-01-01', '59.99'),
+            _history_point('2017-02-01', '59.99'),
+            _history_point('2017-03-01', '159.99'),
+            _history_point('2017-04-01', '159.99'),
+        ]),
+        _acct_history(2, [
+            _history_point('2017-01-01', '1.99'),
+            _history_point('2017-02-01', '159.99'),
+            _history_point('2017-03-01', '159.99'),
+            _history_point('2017-04-01', '1.99'),
+        ]),
+    ]
+    assert actual_histories == expected_histories
