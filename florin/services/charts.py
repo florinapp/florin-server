@@ -1,5 +1,6 @@
 import copy
 import datetime
+from decimal import Decimal
 from .params import get_date_range_params
 from florin.db import Account, Transaction
 from sqlalchemy import func, not_
@@ -33,21 +34,26 @@ def retrofit(account_histories):
         data_points = account_history['history']
         i = 0  # i is the index for account_history['history']
         j = 0  # j is the index for all_date_points
-        while i < len(data_points) and j < len(all_date_points):
+        # while i < len(data_points) and j < len(all_date_points):
+        while j < len(all_date_points):
             data_point = data_points[i]
             date_point = all_date_points[j]
 
             if data_point['date'] == date_point:
                 # date point exists in the series
-                i, j = i + 1, j + 1
+                i = min(i + 1, len(data_points) - 1)
+                j += 1
                 account_balance_by_date[date_point][account['id']] = data_point
             elif data_point['date'] >= date_point:
                 j += 1
+                balance = Decimal('0') if i == 0 else data_points[i-1]['balance']
                 account_balance_by_date[date_point][account['id']] = {'date': date_point,
-                                                                      'balance': data_points[i-1]['balance']}
+                                                                      'balance': balance}
             else:
-                i += 1
-                account_balance_by_date[date_point][account['id']] = data_point
+                j += 1
+                balance = data_points[i]['balance']
+                account_balance_by_date[date_point][account['id']] = {'date': date_point,
+                                                                      'balance': balance}
 
     retval = []
 
