@@ -1,3 +1,4 @@
+import base64
 import os
 import functools
 import flask
@@ -8,6 +9,7 @@ from flask_cors import CORS
 from flask.json import JSONEncoder
 from . import db
 from .services import charts, transactions, exceptions, accounts, categories, uploads
+from StringIO import StringIO
 
 
 logging.basicConfig(level='DEBUG')
@@ -61,6 +63,23 @@ def create_app():
 
 
 app = create_app()
+
+
+@app.route('/api/import', methods=['POST'])
+@jsonify()
+@handle_exceptions
+def import_statement():
+    request_json = flask.request.json
+    if not request_json.get('account_id'):
+        raise exceptions.InvalidRequest("account_id is required")
+    if not request_json.get('data'):
+        raise exceptions.InvalidRequest("data is required")
+
+    file_storage = StringIO(base64.b64decode(request_json.get('data')))
+    response = uploads.upload(app, {'statement.ofx': file_storage})
+    file_upload_id = response['id']
+    response = uploads.link(app, file_upload_id, {'accountId': request_json.get('account_id')})
+    return response
 
 
 @app.route('/api/fileUploads', methods=['POST'])
